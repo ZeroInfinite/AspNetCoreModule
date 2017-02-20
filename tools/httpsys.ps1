@@ -2,19 +2,10 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 
 ##############################################################################
-# $AppId = "4dc3e181-e14b-4a21-b022-59fc669b0914"
-# $IpEndpoint = new-object "IPEndPoint" -ArgumentList 0,443
-# $Cert = Get-Item Cert:\LocalMachine\My\C5A7A22E90D171492E508035E754F792590E20B6
-#
-# From commandline
-# .\httpsys.ps1 -Command Get-SslBinding -IpEndpoint $IpEndpoint
-# .\httpsys.ps1 -Command Add-SslBinding -IpEndpoint $IpEndpoint –Certificate $Cert –AppId $AppId
-# .\httpsys.ps1 -Command Delete-SslBinding -IpEndpoint $IpEndpoint
-#
-# While debugging 
-# Get-SslBinding –_ipEndpoint $IpEndpoint
-# Add-SslBinding –_ipEndpoint $IpEndpoint –_certificate $Cert –_appId $AppId
-# Delete-SslBinding –_ipEndpoint $IpEndpoint
+# Example
+# .\httpsys.ps1 -Command Get-SslBinding -Ip "0x00" -Port 54300
+# .\httpsys.ps1 -Command Add-SslBinding -Ip "0x00" -Port 54300 –Thumbprint "C5A7A22E90D171492E508035E754F792590E20B6" 
+# .\httpsys.ps1 -Command Delete-SslBinding -Ip "0x00" -Port 54300
 ##############################################################################
 
 Param (
@@ -27,16 +18,28 @@ Param (
     
     [parameter()]
     [string]
-    $AppId,
+    $IpAddress,
     
     [parameter()]
-    [System.Net.IPEndPoint]
-    $IpEndpoint,
-    
+    [string]
+    $Port,
+
     [parameter()]
-    [System.Security.Cryptography.X509Certificates.X509Certificate]
-    $Certificate
-)
+    [string]
+    $Thumbprint,
+
+    [parameter()]
+    [string]
+    $AppId)
+
+$IpEndpoint = New-Object "IPEndPoint" -ArgumentList $IpAddress,$Port
+$Certificate = Get-Item "Cert:\LocalMachine\My\$Thumbprint"
+
+if (-not $AppId)
+{
+    # Assign a random GUID for $AppId
+    $AppId = ([guid]::NewGuid()).ToString()
+}
 
 $cs = '
 namespace Microsoft.IIS.Administration.Setup {

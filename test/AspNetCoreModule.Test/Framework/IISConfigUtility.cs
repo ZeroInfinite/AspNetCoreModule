@@ -291,44 +291,6 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
-        public void AddBinding(string siteName, string sslPort = "443000", string ipAddress = "127.0.0.1", string subjectName = "ANCMTest")
-        {
-            // Create certificate
-
-            string powershellScript = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), 
-                "tools", 
-                "certificate.ps1") 
-                + @" -Subject foo";
-            string result = TestUtility.RunPowershellScript(powershellScript);
-
-            /*using (ServerManager serverManager = GetServerManager())
-            {
-                Configuration config = serverManager.GetWebConfiguration(siteName, appName);
-                ConfigurationSection aspNetCoreSection = config.GetSection("system.webServer/aspNetCore");
-                if (attributeName == "environmentVariable")
-                {
-                    string name = ((string[])attributeValue)[0];
-                    string value = ((string[])attributeValue)[1];
-                    ConfigurationElementCollection environmentVariablesCollection = aspNetCoreSection.GetCollection("environmentVariables");
-                    ConfigurationElement environmentVariableElement = environmentVariablesCollection.CreateElement("environmentVariable");
-                    environmentVariableElement["name"] = name;
-                    environmentVariableElement["value"] = value;
-                    var element = FindElement(environmentVariablesCollection, "add", "name", value);
-                    if (element != null)
-                    {
-                        throw new System.ApplicationException("duplicated collection item");
-                    }
-                    environmentVariablesCollection.Add(environmentVariableElement);
-                }
-                else
-                {
-                    aspNetCoreSection[attributeName] = attributeValue;
-                }
-
-                serverManager.CommitChanges();
-            } */
-        }
-
         public void SetANCMConfig(string siteName, string appName, string attributeName, object attributeValue)
         {
             using (ServerManager serverManager = GetServerManager())
@@ -962,14 +924,38 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
-        public void AddBindingToSite(string siteName, string Ip, int Port, string host)
+        public void AddHttpsBindingToSite(string siteName, string ipAddress, int port, string host, string subjectName)
+        {
+            if (subjectName != null)
+            {
+                // Create certificate
+                string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+                string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Subject " + subjectName;
+                string thumbPrint = TestUtility.RunPowershellScript(powershellScript);
+
+                // Configure http.sys certificate mapping
+                // covert ipAddress should be converted to hex value
+                string hexIpAddress = string.Empty;
+                if (ipAddress == "0.0.0.0")
+                {
+                    hexIpAddress = "0x00";
+                }
+                powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -Ip " + hexIpAddress + " -Port 443 –Thumbprint \"" + thumbPrint + "\"";
+                TestUtility.RunPowershellScript(powershellScript);
+            }
+            
+            // Add https binding
+            AddBindingToSite(siteName, ipAddress, port, host, "https");
+        }
+
+        public void AddBindingToSite(string siteName, string ipAddress, int port, string host, string protocol = "http")
         {
             string bindingInfo = "";
-            if (Ip == null)
-                Ip = "*";
-            bindingInfo += Ip;
+            if (ipAddress == null)
+                ipAddress = "*";
+            bindingInfo += ipAddress;
             bindingInfo += ":";
-            bindingInfo += Port;
+            bindingInfo += port;
             bindingInfo += ":";
             if (host != null)
                 bindingInfo += host;
@@ -982,7 +968,7 @@ namespace AspNetCoreModule.Test.Framework
                 {
                     SiteCollection sites = serverManager.Sites;
                     Binding b = sites[siteName].Bindings.CreateElement();
-                    b.SetAttributeValue("protocol", "http");
+                    b.SetAttributeValue("protocol", protocol);
                     b.SetAttributeValue("bindingInformation", bindingInfo);
 
                     sites[siteName].Bindings.Add(b);
