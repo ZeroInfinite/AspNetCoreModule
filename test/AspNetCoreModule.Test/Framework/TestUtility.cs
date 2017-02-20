@@ -16,6 +16,9 @@ using System.Security.AccessControl;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Net;
+using System.Collections.ObjectModel;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
 
 namespace AspNetCoreModule.Test.Framework
 {
@@ -696,6 +699,46 @@ namespace AspNetCoreModule.Test.Framework
             return result;
         }
 
+        public static string RunPowershellScript(string scriptText)
+        {
+            // create Powershell runspace
+            Runspace runspace = RunspaceFactory.CreateRunspace();
+
+            // open it
+            runspace.Open();
+
+            // create a pipeline and feed it the script text
+            Pipeline pipeline = runspace.CreatePipeline();
+            pipeline.Commands.AddScript(scriptText);
+
+            // add an extra command to transform the script output objects into nicely formatted strings
+            // remove this line to get the actual objects that the script returns. For example, the script
+            // "Get-Process" returns a collection of System.Diagnostics.Process instances.
+            pipeline.Commands.Add("Out-String");
+            Collection<PSObject> results = null;
+            try
+            {
+                // execute the script
+                results = pipeline.Invoke();
+            }
+            catch (System.Exception ex)
+            {
+                throw new Exception("Failed to run " + scriptText + " " + ex.ToString());
+            }
+
+            // close the runspace
+            runspace.Close();
+
+            // convert the script result into a single string
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (PSObject obj in results)
+            {
+                stringBuilder.AppendLine(obj.ToString());
+            }
+
+            return stringBuilder.ToString();
+        }
+        
         public static int RunCommand(string fileName, string arguments = null, bool checkStandardError = true, bool waitForExit=true)
         {
             int pid = -1;

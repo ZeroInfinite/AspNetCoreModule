@@ -4,8 +4,8 @@
 using AspNetCoreModule.Test.HttpClientHelper;
 using Microsoft.Web.Administration;
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
-using System.Management;
 using System.ServiceProcess;
 using System.Threading;
 
@@ -289,6 +289,44 @@ namespace AspNetCoreModule.Test.Framework
 
                 serverManager.CommitChanges();
             }
+        }
+
+        public void AddBinding(string siteName, string sslPort = "443000", string ipAddress = "127.0.0.1", string subjectName = "ANCMTest")
+        {
+            // Create certificate
+
+            string powershellScript = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), 
+                "tools", 
+                "certificate.ps1") 
+                + @" -Subject foo";
+            string result = TestUtility.RunPowershellScript(powershellScript);
+
+            /*using (ServerManager serverManager = GetServerManager())
+            {
+                Configuration config = serverManager.GetWebConfiguration(siteName, appName);
+                ConfigurationSection aspNetCoreSection = config.GetSection("system.webServer/aspNetCore");
+                if (attributeName == "environmentVariable")
+                {
+                    string name = ((string[])attributeValue)[0];
+                    string value = ((string[])attributeValue)[1];
+                    ConfigurationElementCollection environmentVariablesCollection = aspNetCoreSection.GetCollection("environmentVariables");
+                    ConfigurationElement environmentVariableElement = environmentVariablesCollection.CreateElement("environmentVariable");
+                    environmentVariableElement["name"] = name;
+                    environmentVariableElement["value"] = value;
+                    var element = FindElement(environmentVariablesCollection, "add", "name", value);
+                    if (element != null)
+                    {
+                        throw new System.ApplicationException("duplicated collection item");
+                    }
+                    environmentVariablesCollection.Add(environmentVariableElement);
+                }
+                else
+                {
+                    aspNetCoreSection[attributeName] = attributeValue;
+                }
+
+                serverManager.CommitChanges();
+            } */
         }
 
         public void SetANCMConfig(string siteName, string appName, string attributeName, object attributeValue)

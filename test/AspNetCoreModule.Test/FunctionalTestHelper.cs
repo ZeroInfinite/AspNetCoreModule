@@ -959,7 +959,22 @@ namespace AspNetCoreModule.Test
                 testSite.AspNetCoreApp.RestoreFile("web.config");
             }
         }
-        
+
+        public static async Task DoClientCertificateMappingTest(IISConfigUtility.AppPoolBitness appPoolBitness)
+        {
+            using (var testSite = new TestWebSite(appPoolBitness, "DoCachingTest"))
+            {
+                using (var iisConfig = new IISConfigUtility(ServerType.IIS))
+                {
+                    iisConfig.AddBinding(testSite.SiteName);                    
+                    string result = string.Empty;
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    Assert.True(result.Contains("Running"), "verify response body");                                        
+                }
+                testSite.AspNetCoreApp.RestoreFile("web.config");
+            }
+        }
+
         public static async Task DoWebSocketTest(IISConfigUtility.AppPoolBitness appPoolBitness, string testData)
         {
             using (var testSite = new TestWebSite(appPoolBitness, "DoWebSocketTest"))
