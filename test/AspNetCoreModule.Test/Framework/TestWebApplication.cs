@@ -101,21 +101,21 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
-        public Uri GetHttpUri()
+        public Uri GetHttpUri(string protocol = "http")
         {
-            return new Uri("http://" + _testSite.HostName + ":" + _testSite.TcpPort.ToString() + URL);
+            return new Uri(protocol + "://" + _testSite.HostName + ":" + _testSite.TcpPort.ToString() + URL);
         }
 
-        public Uri GetHttpUri(string subPath)
+        public Uri GetHttpUri(string subPath, string protocol = "http")
         {
             string tempSubPath = subPath;
             if (!tempSubPath.StartsWith("/"))
             {
                 tempSubPath = "/" + tempSubPath;
             }
-            return new Uri("http://" + _testSite.HostName + ":" +  _testSite.TcpPort.ToString()  + URL + tempSubPath);
+            return new Uri(protocol + "://" + _testSite.HostName + ":" +  _testSite.TcpPort.ToString()  + URL + tempSubPath);
         }
-
+        
         public string _appPoolName = null;
         public string AppPoolName
         {
