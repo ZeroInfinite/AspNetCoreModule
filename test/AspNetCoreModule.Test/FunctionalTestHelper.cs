@@ -975,15 +975,21 @@ namespace AspNetCoreModule.Test
                     // Add https binding
                     iisConfig.AddBindingToSite(testSite.SiteName, ipAddress, port, hostName, "https");
 
-                    // Set SSL Certificate
-                    iisConfig.SetSSLCertificate(port, subjectName, hexIPAddress);
+                    // Create a new self signed certificate
+                    string thumbPrint = iisConfig.CreateSelfSignedCertificate(subjectName);
+
+                    // Create a new SSL certificate mapping to IP:Port endpoint with the newly created self signed certificage
+                    iisConfig.SetSSLCertificate(port, subjectName, hexIPAddress, thumbPrint);
                     
                     string result = string.Empty;
-                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(protocol:"https"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                     Assert.True(result.Contains("Running"), "verify response body");
 
-                    // Remove SSL Certificate
+                    // Remove the SSL Certificate mapping
                     iisConfig.RemoveSSLCertificate(port, hexIPAddress);
+
+                    // Remove the newly created self signed certificate
+                    iisConfig.DeleteCertificate(thumbPrint);
                 }
                 testSite.AspNetCoreApp.RestoreFile("web.config");
             }

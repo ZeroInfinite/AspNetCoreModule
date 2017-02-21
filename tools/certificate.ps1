@@ -1,9 +1,21 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+##############################################################################
+# Example
+# $thumPrint = .\certificate.ps1 -Command Create-SelfSignedCertificate -Subject foo
+# .\certificate.ps1 -Command Delete-Certificate -ThumbPrintToDelete $thumPrint
+##############################################################################
+
+
 Param(
-    [Parameter(Mandatory=$True)]
-    [ValidateNotNullOrEmpty()]
+    [parameter(Mandatory=$true , Position=0)]
+    [ValidateSet("Create-SelfSignedCertificate",
+                 "Delete-Certificate")]
+    [string]
+    $Command,
+
+    [parameter()]
     [string]
     $Subject,
 
@@ -13,96 +25,137 @@ Param(
 
     [Parameter()]
     [string[]]
-    $AlternativeNames = ""
+    $AlternativeNames = "",
+
+    [Parameter()]
+    [string]
+    $ThumbPrintToDelete = ""
 )
 
-$subjectDn = new-object -com "X509Enrollment.CX500DistinguishedName"
-$subjectDn.Encode( "CN=" + $subject, $subjectDn.X500NameFlags.X500NameFlags.XCN_CERT_NAME_STR_NONE)
-$issuer = $subject
-$issuerDn = new-object -com "X509Enrollment.CX500DistinguishedName"
-$issuerDn.Encode("CN=" + $issuer, $subjectDn.X500NameFlags.X500NameFlags.XCN_CERT_NAME_STR_NONE)
+function Create-SelfSignedCertificate($_subject, $_friendlyName, $_alternativeNames) {
 
-#
-# Create a new Private Key
-$key = new-object -com "X509Enrollment.CX509PrivateKey"
-$key.ProviderName =  "Microsoft Enhanced RSA and AES Cryptographic Provider"    
-# XCN_AT_SIGNATURE, The key can be used for signing
-$key.KeySpec = 2
-$key.Length = 2048
-# MachineContext 0: Current User, 1: Local Machine
-$key.MachineContext = 1
-$key.Create() 
+    $subjectDn = new-object -com "X509Enrollment.CX500DistinguishedName"
+    $subjectDn.Encode( "CN=" + $_subject, $subjectDn.X500NameFlags.X500NameFlags.XCN_CERT_NAME_STR_NONE)
+    $issuer = $_subject
+    $issuerDn = new-object -com "X509Enrollment.CX500DistinguishedName"
+    $issuerDn.Encode("CN=" + $issuer, $subjectDn.X500NameFlags.X500NameFlags.XCN_CERT_NAME_STR_NONE)
 
-$cert = new-object -com "X509Enrollment.CX509CertificateRequestCertificate"
-$cert.InitializeFromPrivateKey(2, $key, "")
-$cert.Subject = $subjectDn
-$cert.Issuer = $issuerDn
-$cert.NotBefore = (get-date).AddMinutes(-10)
-$cert.NotAfter = $cert.NotBefore.AddYears(2)
+    #
+    # Create a new Private Key
+    $key = new-object -com "X509Enrollment.CX509PrivateKey"
+    $key.ProviderName =  "Microsoft Enhanced RSA and AES Cryptographic Provider"    
+    # XCN_AT_SIGNATURE, The key can be used for signing
+    $key.KeySpec = 2
+    $key.Length = 2048
+    # MachineContext 0: Current User, 1: Local Machine
+    $key.MachineContext = 1
+    $key.Create() 
 
-#Use Sha256
-$hashAlgorithm = New-Object -ComObject X509Enrollment.CObjectId
-$hashAlgorithm.InitializeFromAlgorithmName(1,0,0,"SHA256")
-$cert.HashAlgorithm = $hashAlgorithm    
+    $cert = new-object -com "X509Enrollment.CX509CertificateRequestCertificate"
+    $cert.InitializeFromPrivateKey(2, $key, "")
+    $cert.Subject = $subjectDn
+    $cert.Issuer = $issuerDn
+    $cert.NotBefore = (get-date).AddMinutes(-10)
+    $cert.NotAfter = $cert.NotBefore.AddYears(2)
+
+    #Use Sha256
+    $hashAlgorithm = New-Object -ComObject X509Enrollment.CObjectId
+    $hashAlgorithm.InitializeFromAlgorithmName(1,0,0,"SHA256")
+    $cert.HashAlgorithm = $hashAlgorithm    
 	 
-#
-# Extended key usage
-$clientAuthOid = New-Object -ComObject "X509Enrollment.CObjectId"
-$clientAuthOid.InitializeFromValue("1.3.6.1.5.5.7.3.2")
-$serverAuthOid = new-object -com "X509Enrollment.CObjectId"
-$serverAuthOid.InitializeFromValue("1.3.6.1.5.5.7.3.1")
-$ekuOids = new-object -com "X509Enrollment.CObjectIds.1"
-$ekuOids.add($clientAuthOid)
-$ekuOids.add($serverAuthOid)
-$ekuExt = new-object -com "X509Enrollment.CX509ExtensionEnhancedKeyUsage"
-$ekuExt.InitializeEncode($ekuOids)
-$cert.X509Extensions.Add($ekuext)
+    #
+    # Extended key usage
+    $clientAuthOid = New-Object -ComObject "X509Enrollment.CObjectId"
+    $clientAuthOid.InitializeFromValue("1.3.6.1.5.5.7.3.2")
+    $serverAuthOid = new-object -com "X509Enrollment.CObjectId"
+    $serverAuthOid.InitializeFromValue("1.3.6.1.5.5.7.3.1")
+    $ekuOids = new-object -com "X509Enrollment.CObjectIds.1"
+    $ekuOids.add($clientAuthOid)
+    $ekuOids.add($serverAuthOid)
+    $ekuExt = new-object -com "X509Enrollment.CX509ExtensionEnhancedKeyUsage"
+    $ekuExt.InitializeEncode($ekuOids)
+    $cert.X509Extensions.Add($ekuext)
 	
-#
-# Key usage
-$keyUsage = New-Object -com "X509Enrollment.cx509extensionkeyusage"
-# XCN_CERT_KEY_ENCIPHERMENT_KEY_USAGE
-$flags = 0x20
-# XCN_CERT_DIGITAL_SIGNATURE_KEY_USAGE
-$flags = $flags -bor 0x80
-$keyUsage.InitializeEncode($flags)
-$cert.X509Extensions.Add($keyUsage)
+    #
+    # Key usage
+    $keyUsage = New-Object -com "X509Enrollment.cx509extensionkeyusage"
+    # XCN_CERT_KEY_ENCIPHERMENT_KEY_USAGE
+    $flags = 0x20
+    # XCN_CERT_DIGITAL_SIGNATURE_KEY_USAGE
+    $flags = $flags -bor 0x80
+    $keyUsage.InitializeEncode($flags)
+    $cert.X509Extensions.Add($keyUsage)
 
-#
-# Subject alternative names
-if ($AlternativeNames -ne $null) {
-    $names =  new-object -com "X509Enrollment.CAlternativeNames"
-    $altNames = new-object -com "X509Enrollment.CX509ExtensionAlternativeNames"
-    foreach ($n in $AlternativeNames) {
-        $name = new-object -com "X509Enrollment.CAlternativeName"
-        # Dns Alternative Name
-        $name.InitializeFromString(3, $n)
-        $names.Add($name)
+    #
+    # Subject alternative names
+    if ($_alternativeNames -ne $null) {
+        $names =  new-object -com "X509Enrollment.CAlternativeNames"
+        $altNames = new-object -com "X509Enrollment.CX509ExtensionAlternativeNames"
+        foreach ($n in $_alternativeNames) {
+            $name = new-object -com "X509Enrollment.CAlternativeName"
+            # Dns Alternative Name
+            $name.InitializeFromString(3, $n)
+            $names.Add($name)
+        }
+        $altNames.InitializeEncode($names)
+        $cert.X509Extensions.Add($altNames)
     }
-    $altNames.InitializeEncode($names)
-    $cert.X509Extensions.Add($altNames)
+
+    $cert.Encode()
+
+    $locator = $(New-Object "System.Guid").ToString()
+    $enrollment = new-object -com "X509Enrollment.CX509Enrollment"
+    $enrollment.CertificateFriendlyName = $locator
+    $enrollment.InitializeFromRequest($cert)
+    $certdata = $enrollment.CreateRequest(0)
+    $enrollment.InstallResponse(2, $certdata, 0, "")
+
+    # Wait for certificate to be populated
+    $end = $(Get-Date).AddSeconds(1)
+    do {
+        $Certificates = Get-ChildItem Cert:\LocalMachine\My
+        foreach ($item in $Certificates)
+        {
+            if ($item.FriendlyName -eq $locator)
+            {
+                $CACertificate = $item
+            }
+        }
+    } while ($CACertificate -eq $null -and $(Get-Date) -lt $end)
+
+    $thumbPrint = ""
+    if ($CACertificate -and $CACertificate.Thumbprint)
+    {
+        $thumbPrint = $CACertificate.Thumbprint.Trim()
+    }
+    return $thumbPrint
 }
 
-$cert.Encode()
+function Delete-Certificate($_thumbPrintToDelete) {
 
-$locator = $(New-Object "System.Guid").ToString()
-$enrollment = new-object -com "X509Enrollment.CX509Enrollment"
-$enrollment.CertificateFriendlyName = $locator
-$enrollment.InitializeFromRequest($cert)
-$certdata = $enrollment.CreateRequest(0)
-$enrollment.InstallResponse(2, $certdata, 0, "")
-
-# Wait for certificate to be populated
-$end = $(Get-Date).AddSeconds(1)
-do {
-    $Certificates = Get-ChildItem Cert:\LocalMachine\My
-    foreach ($item in $Certificates)
+    if (Test-Path "Cert:\LocalMachine\My\$_thumbPrintToDelete")
     {
-        if ($item.FriendlyName -eq $locator)
-        {
-            $CACertificate = $item
-        }
+        Remove-Item "Cert:\LocalMachine\My\$_thumbPrintToDelete" -Force -Confirm:$false
     }
-} while ($CACertificate -eq $null -and $(Get-Date) -lt $end)
 
-return $CACertificate.Thumbprint
+    if (Test-Path "Cert:\LocalMachine\My\$_thumbPrintToDelete")
+    {
+        ("Failed to delete a certificate of $_thumbPrintToDelete")
+    }
+}
+
+switch ($Command)
+{
+    "Create-SelfSignedCertificate"
+    {
+        return Create-SelfSignedCertificate $Subject $FriendlyName $AlternativeNames
+    }
+    "Delete-Certificate"
+    {
+        return Delete-Certificate $ThumbPrintToDelete
+    }
+    default
+    {
+        throw "Unknown command"
+    }
+}

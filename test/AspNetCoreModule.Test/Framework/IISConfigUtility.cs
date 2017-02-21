@@ -924,26 +924,39 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
-        public void SetSSLCertificate(int port, string subjectName, string hexIpAddress)
+        public string CreateSelfSignedCertificate(string subjectName)
         {
-            // Create a new certificate
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Subject " + subjectName;
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Create-SelfSignedCertificate -Subject " + subjectName;
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output.Length != 40)
             {
                 throw new System.ApplicationException("Failed to create a certificate, output: " + output);
             }
+            return output;
+        }
 
-            // Initialize certificate thumbPrint value
-            string thumbPrint = output;
+        public string DeleteCertificate(string thumbPrint)
+        {
+            string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Delete-Certificate -ThumbPrintToDelete " + thumbPrint;
+            string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+            if (output != string.Empty)
+            {
+                throw new System.ApplicationException("Failed to delete a certificate (thumbprint: " + thumbPrint + ", output: " + output);
+            }
+            return output;
+        }
 
+        public void SetSSLCertificate(int port, string subjectName, string hexIpAddress, string thumbPrint)
+        {
             // Remove a certificate mapping if it exists
             RemoveSSLCertificate(port, hexIpAddress);
 
             // Configure certificate mapping with the newly created certificate
-            powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"";
-            output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+            string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"";
+            string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output != string.Empty)
             {
                 throw new System.ApplicationException("Failed to configure certificate, output: " + output);
