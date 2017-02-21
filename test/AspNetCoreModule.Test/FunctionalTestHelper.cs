@@ -968,7 +968,7 @@ namespace AspNetCoreModule.Test
                 {
                     string hostName = "";
                     string subjectName = "localhost";
-                    iisConfig.AddHttpsBindingToSite(testSite.SiteName, "0.0.0.0", 54300, hostName, subjectName);
+                    iisConfig.AddHttpsBindingToSite(testSite.SiteName, "*", 46300, hostName, subjectName, "0x00");
                     string result = string.Empty;
                     result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                     Assert.True(result.Contains("Running"), "verify response body");                                        

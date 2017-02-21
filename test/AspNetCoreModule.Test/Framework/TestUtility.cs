@@ -701,6 +701,8 @@ namespace AspNetCoreModule.Test.Framework
 
         public static string RunPowershellScript(string scriptText)
         {
+            IPEndPoint a = new IPEndPoint(0, 443);
+
             // create Powershell runspace
             Runspace runspace = RunspaceFactory.CreateRunspace();
 

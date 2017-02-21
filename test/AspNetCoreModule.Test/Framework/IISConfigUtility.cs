@@ -924,28 +924,41 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
-        public void AddHttpsBindingToSite(string siteName, string ipAddress, int port, string host, string subjectName)
+        public void AddHttpsBindingToSite(string siteName, string ipAddress, int port, string host, string subjectName, string hexIpAddress)
         {
-            if (subjectName != null)
-            {
-                // Create certificate
-                string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-                string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Subject " + subjectName;
-                string thumbPrint = TestUtility.RunPowershellScript(powershellScript);
-
-                // Configure http.sys certificate mapping
-                // covert ipAddress should be converted to hex value
-                string hexIpAddress = string.Empty;
-                if (ipAddress == "0.0.0.0")
-                {
-                    hexIpAddress = "0x00";
-                }
-                powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -Ip " + hexIpAddress + " -Port 443 –Thumbprint \"" + thumbPrint + "\"";
-                TestUtility.RunPowershellScript(powershellScript);
-            }
-            
             // Add https binding
             AddBindingToSite(siteName, ipAddress, port, host, "https");
+
+            // Configure http.sys certificate mapping
+            if (subjectName != null)
+            {
+                // Create a new certificate
+                string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+                string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Subject " + subjectName;
+                string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+                string thumbPrint = output;
+
+                // Clean up if there is a duplicated one
+                powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Get-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();
+                output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+                if (output != string.Empty)
+                {
+                    powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Delete-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();
+                    output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+                    if (output != string.Empty)
+                    {
+                        throw new System.ApplicationException("Failed to delete certificate, output: " + output);
+                    }
+                }
+
+                // Configure certificate mapping with the newly created certificate
+                powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"";
+                output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+                if (output != string.Empty)
+                {
+                    throw new System.ApplicationException("Failed to configure certificate, output: " + output);
+                }
+            }
         }
 
         public void AddBindingToSite(string siteName, string ipAddress, int port, string host, string protocol = "http")

@@ -3,9 +3,10 @@
 
 ##############################################################################
 # Example
-# .\httpsys.ps1 -Command Get-SslBinding -Ip "0x00" -Port 54300
-# .\httpsys.ps1 -Command Add-SslBinding -Ip "0x00" -Port 54300 –Thumbprint "C5A7A22E90D171492E508035E754F792590E20B6" 
-# .\httpsys.ps1 -Command Delete-SslBinding -Ip "0x00" -Port 54300
+# .\httpsys.ps1 -Command Get-SslBinding -IpAddress "0x00" -Port 54300
+# .\httpsys.ps1 -Command Add-SslBinding -IpAddress "0x00" -Port 54300 –Thumbprint "C5A7A22E90D171492E508035E754F792590E20B6" 
+# .\httpsys.ps1 -Command Add-SslBinding -IpAddress "0x00" -Port 54300 –Thumbprint "089F4492CF04C04BA8D27F5B4E051E22CF4BA059" 
+# .\httpsys.ps1 -Command Delete-SslBinding -IpAddress "0x00" -Port 54300
 ##############################################################################
 
 Param (
@@ -30,15 +31,28 @@ Param (
 
     [parameter()]
     [string]
-    $AppId)
+    $AppId,
 
-$IpEndpoint = New-Object "IPEndPoint" -ArgumentList $IpAddress,$Port
+    [parameter()] 
+    [System.Net.IPEndPoint] 
+    $IpEndPoint
+    )
+
+# Initialize $IpEndPoint
+if (-not $IpEndPoint)
+{
+    if ($IpAddress -and $Port)
+    {
+        $IpEndPoint = New-Object "System.Net.IPEndPoint" -ArgumentList $IpAddress,$Port
+    }
+}
+
 $Certificate = Get-Item "Cert:\LocalMachine\My\$Thumbprint"
 
 if (-not $AppId)
 {
     # Assign a random GUID for $AppId
-    $AppId = ([guid]::NewGuid()).ToString()
+    $AppId = [guid]::NewGuid()
 }
 
 $cs = '
@@ -208,9 +222,11 @@ function Add-SslBinding($_ipEndpoint, $_certificate, $_appId) {
     if ($appId -eq $null) {
         throw "App id required."
     }
+    <# FYI, [System.Guid]::Parse() is not supported in lower version of powershell
     if (-not($_appId -is [System.Guid])) {
         $_appId = [System.Guid]::Parse($_appId)
     }
+    #>
 
     setSslConfiguration $_ipEndpoint $_certificate $_appId
 }
@@ -345,7 +361,7 @@ switch ($Command)
 {
     "Add-SslBinding"
     {
-        return Add-SslBinding $IpEndpoint $Certificate $AppId
+        return Add-SslBinding $IpEndPoint $Certificate $AppId
     }
     "Delete-SslBinding"
     {
