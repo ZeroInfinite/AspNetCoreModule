@@ -924,39 +924,45 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
-        public void AddHttpsBindingToSite(string siteName, string ipAddress, int port, string host, string subjectName, string hexIpAddress)
+        public void SetSSLCertificate(int port, string subjectName, string hexIpAddress)
         {
-            // Add https binding
-            AddBindingToSite(siteName, ipAddress, port, host, "https");
-
-            // Configure http.sys certificate mapping
-            if (subjectName != null)
+            // Create a new certificate
+            string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Subject " + subjectName;
+            string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+            if (output.Length != 40)
             {
-                // Create a new certificate
-                string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-                string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Subject " + subjectName;
-                string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
-                string thumbPrint = output;
+                throw new System.ApplicationException("Failed to create a certificate, output: " + output);
+            }
 
-                // Clean up if there is a duplicated one
-                powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Get-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();
+            // Initialize certificate thumbPrint value
+            string thumbPrint = output;
+
+            // Remove a certificate mapping if it exists
+            RemoveSSLCertificate(port, hexIpAddress);
+
+            // Configure certificate mapping with the newly created certificate
+            powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"";
+            output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+            if (output != string.Empty)
+            {
+                throw new System.ApplicationException("Failed to configure certificate, output: " + output);
+            }
+        }
+
+        public void RemoveSSLCertificate(int port, string hexIpAddress)
+        {
+            string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Get-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();
+            string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+            if (output != string.Empty)
+            {
+                // Delete a certificate mapping if it exists
+                powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Delete-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();
                 output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
                 if (output != string.Empty)
                 {
-                    powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Delete-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();
-                    output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
-                    if (output != string.Empty)
-                    {
-                        throw new System.ApplicationException("Failed to delete certificate, output: " + output);
-                    }
-                }
-
-                // Configure certificate mapping with the newly created certificate
-                powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"";
-                output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
-                if (output != string.Empty)
-                {
-                    throw new System.ApplicationException("Failed to configure certificate, output: " + output);
+                    throw new System.ApplicationException("Failed to delete certificate, output: " + output);
                 }
             }
         }

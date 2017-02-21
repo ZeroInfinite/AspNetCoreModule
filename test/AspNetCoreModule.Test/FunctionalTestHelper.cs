@@ -968,10 +968,22 @@ namespace AspNetCoreModule.Test
                 {
                     string hostName = "";
                     string subjectName = "localhost";
-                    iisConfig.AddHttpsBindingToSite(testSite.SiteName, "*", 46300, hostName, subjectName, "0x00");
+                    string ipAddress = "*";
+                    string hexIPAddress = "0x00";
+                    int port = 46300;
+
+                    // Add https binding
+                    iisConfig.AddBindingToSite(testSite.SiteName, ipAddress, port, hostName, "https");
+
+                    // Set SSL Certificate
+                    iisConfig.SetSSLCertificate(port, subjectName, hexIPAddress);
+                    
                     string result = string.Empty;
                     result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
-                    Assert.True(result.Contains("Running"), "verify response body");                                        
+                    Assert.True(result.Contains("Running"), "verify response body");
+
+                    // Remove SSL Certificate
+                    iisConfig.RemoveSSLCertificate(port, hexIPAddress);
                 }
                 testSite.AspNetCoreApp.RestoreFile("web.config");
             }
