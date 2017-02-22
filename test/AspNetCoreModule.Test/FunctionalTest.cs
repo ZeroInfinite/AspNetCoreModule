@@ -296,6 +296,17 @@ namespace AspNetCoreModule.Test
         [OSSkipCondition(OperatingSystems.MacOSX)]
         [InlineData(IISConfigUtility.AppPoolBitness.enable32Bit)]
         [InlineData(IISConfigUtility.AppPoolBitness.noChange)]
+        public Task SendHTTPSRequestTest(IISConfigUtility.AppPoolBitness appPoolBitness)
+        {
+            return DoSendHTTPSRequestTest(appPoolBitness);
+        }
+
+        [EnvironmentVariableTestCondition("IIS_VARIATIONS_ENABLED")]
+        [ConditionalTheory]
+        [OSSkipCondition(OperatingSystems.Linux)]
+        [OSSkipCondition(OperatingSystems.MacOSX)]
+        [InlineData(IISConfigUtility.AppPoolBitness.enable32Bit)]
+        [InlineData(IISConfigUtility.AppPoolBitness.noChange)]
         public Task ClientCertificateMappingTest(IISConfigUtility.AppPoolBitness appPoolBitness)
         {
             return DoClientCertificateMappingTest(appPoolBitness);

@@ -3,10 +3,9 @@
 
 ##############################################################################
 # Example
-# .\httpsys.ps1 -Command Get-SslBinding -IpAddress "0x00" -Port 54300
-# .\httpsys.ps1 -Command Add-SslBinding -IpAddress "0x00" -Port 54300 –Thumbprint "C5A7A22E90D171492E508035E754F792590E20B6" 
-# .\httpsys.ps1 -Command Add-SslBinding -IpAddress "0x00" -Port 54300 –Thumbprint "089F4492CF04C04BA8D27F5B4E051E22CF4BA059" 
-# .\httpsys.ps1 -Command Delete-SslBinding -IpAddress "0x00" -Port 54300
+# $result = .\httpsys.ps1 -Command Get-SslBinding -IpAddress "0x00" -Port 46300
+# .\httpsys.ps1 -Command Add-SslBinding -IpAddress "0x00" -Port 46300 –Thumbprint $result.CertificateHash
+# .\httpsys.ps1 -Command Delete-SslBinding -IpAddress "0x00" -Port 46300
 ##############################################################################
 
 Param (
@@ -31,6 +30,10 @@ Param (
 
     [parameter()]
     [string]
+    $TargetSSLStore,
+
+    [parameter()]
+    [string]
     $AppId,
 
     [parameter()] 
@@ -38,7 +41,8 @@ Param (
     $IpEndPoint
     )
 
-# Initialize $IpEndPoint
+
+# adjust parameter variables
 if (-not $IpEndPoint)
 {
     if ($IpAddress -and $Port)
@@ -47,7 +51,14 @@ if (-not $IpEndPoint)
     }
 }
 
-$Certificate = Get-Item "Cert:\LocalMachine\My\$Thumbprint"
+if (-not $TargetSSLStore)
+{
+    $TargetSSLStore = "Cert:\LocalMachine\My"
+}
+
+$StoreName = ($TargetSSLStore.Split("\") | Select-Object -Last 1).Trim()
+
+$Certificate = Get-Item "$TargetSSLStore\$Thumbprint"
 
 if (-not $AppId)
 {
@@ -321,7 +332,7 @@ function setSslConfiguration($_ipEndpoint, $_certificate, $_appId) {
         
             $sslSet.SslHashLength = 20
             $sslSet.pSslHash = $pCertBytes
-            $sslSet.pSslCertStoreName = "MY"
+            $sslSet.pSslCertStoreName = $StoreName
 
             $result = [Microsoft.IIS.Administration.Setup.Http]::HttpSetServiceConfiguration([System.IntPtr]::Zero, 
                       [Microsoft.IIS.Administration.Setup.Http]::HTTP_SERVICE_CONFIG_SSLCERT_INFO,

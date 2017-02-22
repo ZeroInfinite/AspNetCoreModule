@@ -41,7 +41,7 @@ namespace AspNetCoreModule.Test
 
                 DateTime startTime = DateTime.Now;
 
-                string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                 Assert.NotEqual(backendProcessId_old, backendProcessId);
                 var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
                 Assert.Equal(backendProcess.ProcessName.ToLower().Replace(".exe", ""), testSite.AspNetCoreApp.GetProcessFileName().ToLower().Replace(".exe", ""));
@@ -50,7 +50,7 @@ namespace AspNetCoreModule.Test
                 var httpClientHandler = new HttpClientHandler();
                 var httpClient = new HttpClient(httpClientHandler)
                 {
-                    BaseAddress = testSite.AspNetCoreApp.GetHttpUri(),
+                    BaseAddress = testSite.AspNetCoreApp.GetUri(),
                     Timeout = TimeSpan.FromSeconds(5),
                 };
 
@@ -73,7 +73,7 @@ namespace AspNetCoreModule.Test
                     DateTime startTime = DateTime.Now;
                     Thread.Sleep(1000);
 
-                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     Assert.NotEqual(backendProcessId_old, backendProcessId);
                     backendProcessId_old = backendProcessId;
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
@@ -99,7 +99,7 @@ namespace AspNetCoreModule.Test
                     DateTime startTime = DateTime.Now;
                     Thread.Sleep(1000);
 
-                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     Assert.NotEqual(backendProcessId_old, backendProcessId);
                     backendProcessId_old = backendProcessId;
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
@@ -131,7 +131,7 @@ namespace AspNetCoreModule.Test
                     DateTime startTime = DateTime.Now;
                     Thread.Sleep(1000);
 
-                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
                     Assert.NotEqual(backendProcessId_old, backendProcessId);
                     backendProcessId_old = backendProcessId;
@@ -163,7 +163,7 @@ namespace AspNetCoreModule.Test
                     Thread.Sleep(500);
 
                     string urlForUrlRewrite = testSite.URLRewriteApp.URL + "/Rewrite2/" + testSite.AspNetCoreApp.URL + "/GetProcessId";
-                    string backendProcessId = await GetResponse(testSite.RootAppContext.GetHttpUri(urlForUrlRewrite), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.RootAppContext.GetUri(urlForUrlRewrite), HttpStatusCode.OK);
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
                     Assert.NotEqual(backendProcessId_old, backendProcessId);
                     backendProcessId_old = backendProcessId;
@@ -196,7 +196,7 @@ namespace AspNetCoreModule.Test
                     Thread.Sleep(1000);
 
                     string urlForUrlRewrite = testSite.URLRewriteApp.URL + "/Rewrite2/" + testSite.AspNetCoreApp.URL + "/GetProcessId";
-                    string backendProcessId = await GetResponse(testSite.RootAppContext.GetHttpUri(urlForUrlRewrite), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.RootAppContext.GetUri(urlForUrlRewrite), HttpStatusCode.OK);
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
                     Assert.NotEqual(backendProcessId_old, backendProcessId);
                     backendProcessId_old = backendProcessId;
@@ -221,8 +221,8 @@ namespace AspNetCoreModule.Test
                     DateTime startTime = DateTime.Now;
                     Thread.Sleep(500);
 
-                    string totalNumber = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetEnvironmentVariables"), HttpStatusCode.OK);
-                    Assert.True(totalNumber == (await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetEnvironmentVariables"), HttpStatusCode.OK)));
+                    string totalNumber = await GetResponse(testSite.AspNetCoreApp.GetUri("GetEnvironmentVariables"), HttpStatusCode.OK);
+                    Assert.True(totalNumber == (await GetResponse(testSite.AspNetCoreApp.GetUri("GetEnvironmentVariables"), HttpStatusCode.OK)));
 
                     iisConfig.SetANCMConfig(
                         testSite.SiteName, 
@@ -237,7 +237,7 @@ namespace AspNetCoreModule.Test
                     TestUtility.ResetHelper(ResetHelperMode.KillVSJitDebugger);
 
                     int expectedValue = Convert.ToInt32(totalNumber) + 1;
-                    Assert.True(expectedValue.ToString() == (await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetEnvironmentVariables"), HttpStatusCode.OK)));
+                    Assert.True(expectedValue.ToString() == (await GetResponse(testSite.AspNetCoreApp.GetUri("GetEnvironmentVariables"), HttpStatusCode.OK)));
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "environmentVariable", new string[] { "ANCMTestBar", "bar" });
                     Thread.Sleep(500);
 
@@ -245,8 +245,8 @@ namespace AspNetCoreModule.Test
                     TestUtility.ResetHelper(ResetHelperMode.KillVSJitDebugger);
 
                     expectedValue++;
-                    Assert.True("foo" == (await GetResponse(testSite.AspNetCoreApp.GetHttpUri("ExpandEnvironmentVariablesANCMTestFoo"), HttpStatusCode.OK)));
-                    Assert.True("bar" == (await GetResponse(testSite.AspNetCoreApp.GetHttpUri("ExpandEnvironmentVariablesANCMTestBar"), HttpStatusCode.OK)));
+                    Assert.True("foo" == (await GetResponse(testSite.AspNetCoreApp.GetUri("ExpandEnvironmentVariablesANCMTestFoo"), HttpStatusCode.OK)));
+                    Assert.True("bar" == (await GetResponse(testSite.AspNetCoreApp.GetUri("ExpandEnvironmentVariablesANCMTestBar"), HttpStatusCode.OK)));
                 }
 
                 testSite.AspNetCoreApp.RestoreFile("web.config");
@@ -270,11 +270,11 @@ namespace AspNetCoreModule.Test
                     Thread.Sleep(1100);
 
                     // verify 503 
-                    await VerifyResponseBody(testSite.AspNetCoreApp.GetHttpUri(), fileContent + "\r\n", HttpStatusCode.ServiceUnavailable);
+                    await VerifyResponseBody(testSite.AspNetCoreApp.GetUri(), fileContent + "\r\n", HttpStatusCode.ServiceUnavailable);
 
                     // rename app_offline.htm to _app_offline.htm and verify 200
                     testSite.AspNetCoreApp.MoveFile("App_Offline.Htm", "_App_Offline.Htm");
-                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
                     Assert.Equal(backendProcess.ProcessName.ToLower().Replace(".exe", ""), testSite.AspNetCoreApp.GetProcessFileName().ToLower().Replace(".exe", ""));
                     Assert.NotEqual(backendProcessId_old, backendProcessId);
@@ -305,11 +305,11 @@ namespace AspNetCoreModule.Test
 
                     // verify 503 
                     string urlForUrlRewrite = testSite.URLRewriteApp.URL + "/Rewrite2/" + testSite.AspNetCoreApp.URL + "/GetProcessId";
-                    await VerifyResponseBody(testSite.RootAppContext.GetHttpUri(urlForUrlRewrite), fileContent + "\r\n", HttpStatusCode.ServiceUnavailable);
+                    await VerifyResponseBody(testSite.RootAppContext.GetUri(urlForUrlRewrite), fileContent + "\r\n", HttpStatusCode.ServiceUnavailable);
 
                     // delete app_offline.htm and verify 200 
                     testSite.AspNetCoreApp.DeleteFile("App_Offline.Htm");
-                    string backendProcessId = await GetResponse(testSite.RootAppContext.GetHttpUri(urlForUrlRewrite), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.RootAppContext.GetUri(urlForUrlRewrite), HttpStatusCode.OK);
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
                     Assert.Equal(backendProcess.ProcessName.ToLower().Replace(".exe", ""), testSite.AspNetCoreApp.GetProcessFileName().ToLower().Replace(".exe", ""));
                     Assert.NotEqual(backendProcessId_old, backendProcessId);
@@ -333,7 +333,7 @@ namespace AspNetCoreModule.Test
                 new KeyValuePair<string, string>("TestData", testData),
             };
                 var expectedResponseBody = "FirstName=Mickey&LastName=Mouse&TestData=" + testData;
-                await VerifyPostResponseBody(testSite.AspNetCoreApp.GetHttpUri("EchoPostData"), postFormData, expectedResponseBody, HttpStatusCode.OK);
+                await VerifyPostResponseBody(testSite.AspNetCoreApp.GetUri("EchoPostData"), postFormData, expectedResponseBody, HttpStatusCode.OK);
             }
         }
 
@@ -359,7 +359,7 @@ namespace AspNetCoreModule.Test
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "disableStartUpErrorPage", true);
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "processPath", errorMessageContainThis);
 
-                    var responseBody = await GetResponse(testSite.AspNetCoreApp.GetHttpUri(), HttpStatusCode.BadGateway);
+                    var responseBody = await GetResponse(testSite.AspNetCoreApp.GetUri(), HttpStatusCode.BadGateway);
                     responseBody = responseBody.Replace("\r", "").Replace("\n", "").Trim();
                     Assert.True(responseBody == curstomErrorMessage);
 
@@ -376,7 +376,7 @@ namespace AspNetCoreModule.Test
                     // check JitDebugger before continuing 
                     TestUtility.ResetHelper(ResetHelperMode.KillVSJitDebugger);
 
-                    responseBody = await GetResponse(testSite.AspNetCoreApp.GetHttpUri(), HttpStatusCode.BadGateway);
+                    responseBody = await GetResponse(testSite.AspNetCoreApp.GetUri(), HttpStatusCode.BadGateway);
                     Assert.True(responseBody.Contains("808681"));
 
                     // verify event error log
@@ -409,7 +409,7 @@ namespace AspNetCoreModule.Test
                         DateTime startTimeInsideLooping = DateTime.Now;
                         Thread.Sleep(50);
 
-                        var statusCode = await GetResponseStatusCode(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"));
+                        var statusCode = await GetResponseStatusCode(testSite.AspNetCoreApp.GetUri("GetProcessId"));
                         if (statusCode != HttpStatusCode.OK.ToString())
                         {
                             Assert.True(i >= valueOfRapidFailsPerMinute, i.ToString() + "is greater than or equals to " + valueOfRapidFailsPerMinute.ToString());
@@ -418,7 +418,7 @@ namespace AspNetCoreModule.Test
                             break;
                         }
 
-                        string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                        string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                         Assert.NotEqual(backendProcessId_old, backendProcessId);
                         backendProcessId_old = backendProcessId;
                         var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
@@ -455,7 +455,7 @@ namespace AspNetCoreModule.Test
 
                     for (int i = 0; i < 20; i++)
                     {
-                        string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                        string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                         int id = Convert.ToInt32(backendProcessId);
                         if (!processIDs.Contains(id))
                         {
@@ -487,7 +487,7 @@ namespace AspNetCoreModule.Test
 
                     for (int i = 0; i < 20; i++)
                     {
-                        string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                        string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                         int id = Convert.ToInt32(backendProcessId);
                         if (!processIDs.Contains(id))
                         {
@@ -521,11 +521,11 @@ namespace AspNetCoreModule.Test
                     Thread.Sleep(500);
                     if (startupTimeLimit < startupDelay)
                     {
-                        await VerifyResponseStatus(testSite.AspNetCoreApp.GetHttpUri("DoSleep3000"), HttpStatusCode.BadGateway);
+                        await VerifyResponseStatus(testSite.AspNetCoreApp.GetUri("DoSleep3000"), HttpStatusCode.BadGateway);
                     }
                     else 
                     {
-                        await VerifyResponseBody(testSite.AspNetCoreApp.GetHttpUri("DoSleep3000"), "Running", HttpStatusCode.OK);
+                        await VerifyResponseBody(testSite.AspNetCoreApp.GetUri("DoSleep3000"), "Running", HttpStatusCode.OK);
                     }
                 }
                 testSite.AspNetCoreApp.RestoreFile("web.config");
@@ -543,11 +543,11 @@ namespace AspNetCoreModule.Test
 
                     if (requestTimeout.ToString() == "00:02:00")
                     {
-                        await VerifyResponseBody(testSite.AspNetCoreApp.GetHttpUri("DoSleep65000"), "Running", HttpStatusCode.OK, timeout:70);                        
+                        await VerifyResponseBody(testSite.AspNetCoreApp.GetUri("DoSleep65000"), "Running", HttpStatusCode.OK, timeout:70);                        
                     }
                     else if (requestTimeout.ToString() == "00:01:00")
                     {
-                        await VerifyResponseStatus(testSite.AspNetCoreApp.GetHttpUri("DoSleep65000"), HttpStatusCode.BadGateway, 70);
+                        await VerifyResponseStatus(testSite.AspNetCoreApp.GetUri("DoSleep65000"), HttpStatusCode.BadGateway, 70);
                     }
                     else
                     {
@@ -573,8 +573,8 @@ namespace AspNetCoreModule.Test
                         new string[] { "ANCMTestShutdownDelay", "20000" }
                         );
 
-                    await VerifyResponseBody(testSite.AspNetCoreApp.GetHttpUri(), "Running", HttpStatusCode.OK);
-                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    await VerifyResponseBody(testSite.AspNetCoreApp.GetUri(), "Running", HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     var backendProcess = Process.GetProcessById(Convert.ToInt32(backendProcessId));
 
                     // Set a new value such as 100 to make the backend process being recycled
@@ -585,8 +585,8 @@ namespace AspNetCoreModule.Test
                     var difference = endTime - startTime;
                     Assert.True(difference.Seconds >= expectedClosingTime);
                     Assert.True(difference.Seconds < expectedClosingTime + 3);
-                    Assert.True(backendProcessId != await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK));
-                    await VerifyResponseBody(testSite.AspNetCoreApp.GetHttpUri(), "Running", HttpStatusCode.OK);
+                    Assert.True(backendProcessId != await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK));
+                    await VerifyResponseBody(testSite.AspNetCoreApp.GetUri(), "Running", HttpStatusCode.OK);
                 }
 
                 testSite.AspNetCoreApp.RestoreFile("web.config");
@@ -605,7 +605,7 @@ namespace AspNetCoreModule.Test
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "stdoutLogEnabled", true);
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "stdoutLogFile", @".\logs\stdout");
 
-                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     string logPath = testSite.AspNetCoreApp.GetDirectoryPathWith("logs");
                     Assert.False(Directory.Exists(logPath));
                     Assert.True(TestUtility.RetryHelper((arg1, arg2, arg3) => VerifyApplicationEventLog(arg1, arg2, arg3), 1004, startTime, @"logs\stdout"));
@@ -615,7 +615,7 @@ namespace AspNetCoreModule.Test
 
                     // verify the log file is not created because backend process is not recycled
                     Assert.True(Directory.GetFiles(logPath).Length == 0);
-                    Assert.True(backendProcessId == (await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK)));
+                    Assert.True(backendProcessId == (await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK)));
 
                     // reset web.config to recycle backend process and give write permission to the Users local group to which IIS workerprocess identity belongs
                     SecurityIdentifier sid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
@@ -630,7 +630,7 @@ namespace AspNetCoreModule.Test
 
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "stdoutLogEnabled", true);
 
-                    Assert.True(backendProcessId != (await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK)));
+                    Assert.True(backendProcessId != (await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK)));
 
                     // Verify log file is created now after backend process is recycled
                     Assert.True(TestUtility.RetryHelper(p => { return Directory.GetFiles(p).Length > 0 ? true : false; }, logPath));
@@ -647,7 +647,7 @@ namespace AspNetCoreModule.Test
                 using (var iisConfig = new IISConfigUtility(ServerType.IIS))
                 {
                     string arguments = argumentsPrefix + testSite.AspNetCoreApp.GetArgumentFileName();
-                    string tempProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string tempProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     var tempBackendProcess = Process.GetProcessById(Convert.ToInt32(tempProcessId));
 
                     // replace $env with the actual test value
@@ -669,7 +669,7 @@ namespace AspNetCoreModule.Test
                     TestUtility.ResetHelper(ResetHelperMode.KillVSJitDebugger);
                     Thread.Sleep(500);
 
-                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     Assert.True(TestUtility.RetryHelper((arg1, arg2) => VerifyANCMStartEvent(arg1, arg2), startTime, backendProcessId));
                 }
 
@@ -685,7 +685,7 @@ namespace AspNetCoreModule.Test
                 {
                     string result = string.Empty;
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "forwardWindowsAuthToken", enabledForwardWindowsAuthToken);
-                    string requestHeaders = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("DumpRequestHeaders"), HttpStatusCode.OK);
+                    string requestHeaders = await GetResponse(testSite.AspNetCoreApp.GetUri("DumpRequestHeaders"), HttpStatusCode.OK);
                     Assert.False(requestHeaders.ToUpper().Contains("MS-ASPNETCORE-WINAUTHTOKEN"));
 
                     iisConfig.EnableWindowsAuthentication(testSite.SiteName);
@@ -696,13 +696,13 @@ namespace AspNetCoreModule.Test
                     TestUtility.ResetHelper(ResetHelperMode.KillVSJitDebugger);
                     Thread.Sleep(500);
 
-                    requestHeaders = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("DumpRequestHeaders"), HttpStatusCode.OK);
+                    requestHeaders = await GetResponse(testSite.AspNetCoreApp.GetUri("DumpRequestHeaders"), HttpStatusCode.OK);
                     if (enabledForwardWindowsAuthToken)
                     {
                         string expectedHeaderName = "MS-ASPNETCORE-WINAUTHTOKEN";
                         Assert.True(requestHeaders.ToUpper().Contains(expectedHeaderName));
 
-                        result = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("ImpersonateMiddleware"), HttpStatusCode.OK);
+                        result = await GetResponse(testSite.AspNetCoreApp.GetUri("ImpersonateMiddleware"), HttpStatusCode.OK);
                         bool compare = false;
 
                         string expectedValue1 = "ImpersonateMiddleware-UserName = " + Environment.ExpandEnvironmentVariables("%USERDOMAIN%") + "\\" + Environment.ExpandEnvironmentVariables("%USERNAME%");
@@ -723,7 +723,7 @@ namespace AspNetCoreModule.Test
                     {
                         Assert.False(requestHeaders.ToUpper().Contains("MS-ASPNETCORE-WINAUTHTOKEN"));
 
-                        result = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("ImpersonateMiddleware"), HttpStatusCode.OK);
+                        result = await GetResponse(testSite.AspNetCoreApp.GetUri("ImpersonateMiddleware"), HttpStatusCode.OK);
                         Assert.True(result.Contains("ImpersonateMiddleware-UserName = NoAuthentication"));
                     }
                 }
@@ -740,10 +740,10 @@ namespace AspNetCoreModule.Test
                 {
                     
                     // allocating 1024,000 KB
-                    await VerifyResponseStatus(testSite.AspNetCoreApp.GetHttpUri("MemoryLeak1024000"), HttpStatusCode.OK);
+                    await VerifyResponseStatus(testSite.AspNetCoreApp.GetUri("MemoryLeak1024000"), HttpStatusCode.OK);
                     
                     // get backend process id
-                    string pocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string pocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     
                     // get process id of IIS worker process (w3wp.exe)
                     string userName = testSite.SiteName;
@@ -777,7 +777,7 @@ namespace AspNetCoreModule.Test
                     iisConfig.SetANCMConfig(testSite.SiteName, testSite.AspNetCoreApp.Name, "rapidFailsPerMinute", 100);
                     Thread.Sleep(3000);
 
-                    await VerifyResponseStatus(testSite.RootAppContext.GetHttpUri("small.htm"), HttpStatusCode.OK);
+                    await VerifyResponseStatus(testSite.RootAppContext.GetUri("small.htm"), HttpStatusCode.OK);
                     Thread.Sleep(1000);
                     int x = Convert.ToInt32(TestUtility.GetProcessWMIAttributeValue("w3wp.exe", "Handle", userName));
 
@@ -788,14 +788,14 @@ namespace AspNetCoreModule.Test
                         // check JitDebugger before continuing 
                         foundVSJit = TestUtility.ResetHelper(ResetHelperMode.KillVSJitDebugger);
 
-                        await VerifyResponseStatus(testSite.RootAppContext.GetHttpUri("small.htm"), HttpStatusCode.OK);
+                        await VerifyResponseStatus(testSite.RootAppContext.GetUri("small.htm"), HttpStatusCode.OK);
                         Thread.Sleep(3000);
                     }
 
                     int y = Convert.ToInt32(TestUtility.GetProcessWMIAttributeValue("w3wp.exe", "Handle", userName));
                     Assert.True(x == y && foundVSJit == false, "worker process is not recycled after 30 seconds");
 
-                    string backupPocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    string backupPocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     string newPocessIdBackendProcess = backupPocessIdBackendProcess;
 
                     // Verify IIS recycling happens while there is memory leak
@@ -805,9 +805,9 @@ namespace AspNetCoreModule.Test
                         foundVSJit = TestUtility.ResetHelper(ResetHelperMode.KillVSJitDebugger);
 
                         // allocating 2048,000 KB
-                        await VerifyResponseStatus(testSite.AspNetCoreApp.GetHttpUri("MemoryLeak2048000"), HttpStatusCode.OK);
+                        await VerifyResponseStatus(testSite.AspNetCoreApp.GetUri("MemoryLeak2048000"), HttpStatusCode.OK);
 
-                        newPocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                        newPocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                         if (foundVSJit || backupPocessIdBackendProcess != newPocessIdBackendProcess)
                         {
                             // worker process is recycled expectedly and backend process is recycled together
@@ -834,7 +834,7 @@ namespace AspNetCoreModule.Test
                     z = Convert.ToInt32(TestUtility.GetProcessWMIAttributeValue("w3wp.exe", "Handle", userName));
                     Assert.True(x != z, "worker process is recycled");
 
-                    newPocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                    newPocessIdBackendProcess = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
                     Assert.True(backupPocessIdBackendProcess != newPocessIdBackendProcess, "backend process is recycled");
                 }
                 testSite.AspNetCoreApp.RestoreFile("web.config");
@@ -876,29 +876,29 @@ namespace AspNetCoreModule.Test
                     string result = string.Empty;
                     if (!useCompressionMiddleWare && !enableIISCompression)
                     {
-                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                         Assert.True(result.Contains("foohtm"), "verify response body");
                         Assert.False(result.Contains("Content-Encoding"), "verify response header");
 
-                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri("pdir/bar.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri("pdir/bar.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                         Assert.True(result.Contains("barhtm"), "verify response body");
                         Assert.False(result.Contains("Content-Encoding"), "verify response header");
 
-                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                         Assert.True(result.Contains("defaulthtm"), "verify response body");
                         Assert.False(result.Contains("Content-Encoding"), "verify response header");
                     }
                     else
                     {
-                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                         Assert.True(result.Contains("foohtm"), "verify response body");
                         Assert.Equal("gzip", GetHeaderValue(result, "Content-Encoding"));
 
-                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri("pdir/bar.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri("pdir/bar.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                         Assert.True(result.Contains("barhtm"), "verify response body");
                         Assert.Equal("gzip", GetHeaderValue(result, "Content-Encoding"));
 
-                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                        result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                         Assert.True(result.Contains("defaulthtm"), "verify response body");
                         Assert.Equal("gzip", GetHeaderValue(result, "Content-Encoding"));
                     }
@@ -937,20 +937,20 @@ namespace AspNetCoreModule.Test
 
                     string result = string.Empty;
 
-                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                     string headerValue = GetHeaderValue(result, "MyCustomHeader");
                     Assert.True(result.Contains("foohtm"), "verify response body");
                     Assert.Equal("gzip", GetHeaderValue(result, "Content-Encoding"));
                     Thread.Sleep(2000);
 
-                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                     string headerValue2 = GetHeaderValue(result, "MyCustomHeader");
                     Assert.True(result.Contains("foohtm"), "verify response body");
                     Assert.Equal("gzip", GetHeaderValue(result, "Content-Encoding"));
                     Assert.Equal(headerValue, headerValue2);
 
                     Thread.Sleep(12000);
-                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri("foo.htm"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                     Assert.True(result.Contains("foohtm"), "verify response body");
                     Assert.Equal("gzip", GetHeaderValue(result, "Content-Encoding"));
                     string headerValue3 = GetHeaderValue(result, "MyCustomHeader");
@@ -960,9 +960,9 @@ namespace AspNetCoreModule.Test
             }
         }
 
-        public static async Task DoClientCertificateMappingTest(IISConfigUtility.AppPoolBitness appPoolBitness)
+        public static async Task DoSendHTTPSRequestTest(IISConfigUtility.AppPoolBitness appPoolBitness)
         {
-            using (var testSite = new TestWebSite(appPoolBitness, "DoCachingTest"))
+            using (var testSite = new TestWebSite(appPoolBitness, "DoSendHTTPSRequestTest"))
             {
                 using (var iisConfig = new IISConfigUtility(ServerType.IIS))
                 {
@@ -970,26 +970,83 @@ namespace AspNetCoreModule.Test
                     string subjectName = "localhost";
                     string ipAddress = "*";
                     string hexIPAddress = "0x00";
-                    int port = 46300;
+                    int sslPort = 46300;
 
                     // Add https binding
-                    iisConfig.AddBindingToSite(testSite.SiteName, ipAddress, port, hostName, "https");
+                    iisConfig.AddBindingToSite(testSite.SiteName, ipAddress, sslPort, hostName, "https");
 
                     // Create a new self signed certificate
                     string thumbPrint = iisConfig.CreateSelfSignedCertificate(subjectName);
 
+                    // Export the self signed certificate to rootCA
+                    iisConfig.ExportCertificateToTrustedRootCA(thumbPrint);
+
                     // Create a new SSL certificate mapping to IP:Port endpoint with the newly created self signed certificage
-                    iisConfig.SetSSLCertificate(port, subjectName, hexIPAddress, thumbPrint);
-                    
+                    iisConfig.SetSSLCertificate(sslPort, subjectName, hexIPAddress, thumbPrint);
+
+                    // verify http request
                     string result = string.Empty;
-                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetHttpUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    Assert.True(result.Contains("Running"), "verify response body");
+
+                    // verify https request
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri(null, sslPort, protocol: "https"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
                     Assert.True(result.Contains("Running"), "verify response body");
 
                     // Remove the SSL Certificate mapping
-                    iisConfig.RemoveSSLCertificate(port, hexIPAddress);
+                    iisConfig.RemoveSSLCertificate(sslPort, hexIPAddress);
 
                     // Remove the newly created self signed certificate
                     iisConfig.DeleteCertificate(thumbPrint);
+
+                    // Remove the exported self signed certificate on rootCA
+                    iisConfig.DeleteCertificate(thumbPrint, @"Cert:\LocalMachine\Root");
+                }
+                testSite.AspNetCoreApp.RestoreFile("web.config");
+            }
+        }
+
+        public static async Task DoClientCertificateMappingTest(IISConfigUtility.AppPoolBitness appPoolBitness)
+        {
+            using (var testSite = new TestWebSite(appPoolBitness, "DoClientCertificateMappingTest"))
+            {
+                using (var iisConfig = new IISConfigUtility(ServerType.IIS))
+                {
+                    string hostName = "";
+                    string subjectName = "localhost";
+                    string ipAddress = "*";
+                    string hexIPAddress = "0x00";
+                    int sslPort = 46300;
+
+                    // Add https binding
+                    iisConfig.AddBindingToSite(testSite.SiteName, ipAddress, sslPort, hostName, "https");
+
+                    // Create a new self signed certificate
+                    string thumbPrint = iisConfig.CreateSelfSignedCertificate(subjectName);
+
+                    // Export the self signed certificate to rootCA
+                    iisConfig.ExportCertificateToTrustedRootCA(thumbPrint);
+
+                    // Create a new SSL certificate mapping to IP:Port endpoint with the newly created self signed certificage
+                    iisConfig.SetSSLCertificate(sslPort, subjectName, hexIPAddress, thumbPrint);
+                    
+                    // verify http request
+                    string result = string.Empty;
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    Assert.True(result.Contains("Running"), "verify response body");
+
+                    // verify https request
+                    result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri(null, sslPort, protocol: "https"), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);
+                    Assert.True(result.Contains("Running"), "verify response body");
+                    
+                    // Remove the SSL Certificate mapping
+                    iisConfig.RemoveSSLCertificate(sslPort, hexIPAddress);
+
+                    // Remove the newly created self signed certificate
+                    iisConfig.DeleteCertificate(thumbPrint);
+
+                    // Remove the exported self signed certificate on rootCA
+                    iisConfig.DeleteCertificate(thumbPrint, @"Cert:\LocalMachine\Root");
                 }
                 testSite.AspNetCoreApp.RestoreFile("web.config");
             }
@@ -1001,16 +1058,16 @@ namespace AspNetCoreModule.Test
             {
                 DateTime startTime = DateTime.Now;
 
-                await VerifyResponseBody(testSite.AspNetCoreApp.GetHttpUri(), "Running", HttpStatusCode.OK);
+                await VerifyResponseBody(testSite.AspNetCoreApp.GetUri(), "Running", HttpStatusCode.OK);
 
                 // Get Process ID
-                string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetHttpUri("GetProcessId"), HttpStatusCode.OK);
+                string backendProcessId = await GetResponse(testSite.AspNetCoreApp.GetUri("GetProcessId"), HttpStatusCode.OK);
 
                 // Verify WebSocket without setting subprotocol
-                await VerifyResponseBodyContain(testSite.WebSocketApp.GetHttpUri("echo.aspx"), new string[] { "Socket Open" }, HttpStatusCode.OK); // echo.aspx has hard coded path for the websocket server
+                await VerifyResponseBodyContain(testSite.WebSocketApp.GetUri("echo.aspx"), new string[] { "Socket Open" }, HttpStatusCode.OK); // echo.aspx has hard coded path for the websocket server
 
                 // Verify WebSocket subprotocol
-                await VerifyResponseBodyContain(testSite.WebSocketApp.GetHttpUri("echoSubProtocol.aspx"), new string[] { "Socket Open", "mywebsocketsubprotocol" }, HttpStatusCode.OK); // echoSubProtocol.aspx has hard coded path for the websocket server
+                await VerifyResponseBodyContain(testSite.WebSocketApp.GetUri("echoSubProtocol.aspx"), new string[] { "Socket Open", "mywebsocketsubprotocol" }, HttpStatusCode.OK); // echoSubProtocol.aspx has hard coded path for the websocket server
 
                 // Verify process creation ANCM event log
                 Assert.True(TestUtility.RetryHelper((arg1, arg2) => VerifyANCMStartEvent(arg1, arg2), startTime, backendProcessId));
@@ -1018,7 +1075,7 @@ namespace AspNetCoreModule.Test
                 // Verify websocket 
                 using (WebSocketClientHelper websocketClient = new WebSocketClientHelper())
                 {
-                    var frameReturned = websocketClient.Connect(testSite.AspNetCoreApp.GetHttpUri("websocket"), true, true);
+                    var frameReturned = websocketClient.Connect(testSite.AspNetCoreApp.GetUri("websocket"), true, true);
                     Assert.True(frameReturned.Content.Contains("Connection: Upgrade"));
                     Assert.True(frameReturned.Content.Contains("HTTP/1.1 101 Switching Protocols"));
                     Thread.Sleep(500);
@@ -1031,7 +1088,7 @@ namespace AspNetCoreModule.Test
                 }
 
                 // send a simple request again and verify the response body
-                await VerifyResponseBody(testSite.AspNetCoreApp.GetHttpUri(), "Running", HttpStatusCode.OK);
+                await VerifyResponseBody(testSite.AspNetCoreApp.GetUri(), "Running", HttpStatusCode.OK);
             }
         }
 
@@ -1164,7 +1221,7 @@ namespace AspNetCoreModule.Test
 
         private static async Task CheckChunkedAsync(HttpClient client, TestWebApplication webApp)
         {
-            var response = await client.GetAsync(webApp.GetHttpUri("chunked"));
+            var response = await client.GetAsync(webApp.GetUri("chunked"));
             var responseText = await response.Content.ReadAsStringAsync();
             try
             {

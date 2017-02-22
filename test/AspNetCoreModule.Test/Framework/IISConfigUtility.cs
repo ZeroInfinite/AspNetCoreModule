@@ -936,10 +936,22 @@ namespace AspNetCoreModule.Test.Framework
             return output;
         }
 
-        public string DeleteCertificate(string thumbPrint)
+        public string ExportCertificateToTrustedRootCA(string thumbPrint, string sslStore = @"Cert:\LocalMachine\My")
         {
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Delete-Certificate -ThumbPrintToDelete " + thumbPrint;
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Export-CertificateToTrustedRootCA -TargetThumbPrint " + thumbPrint + " -TargetSSLStore " + sslStore;
+            string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+            if (output != string.Empty)
+            {
+                throw new System.ApplicationException("Failed to export a certificate to RootCA, output: " + output);
+            }
+            return output;
+        }
+
+        public string DeleteCertificate(string thumbPrint, string sslStore= @"Cert:\LocalMachine\My")
+        {
+            string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Delete-Certificate -TargetThumbPrint " + thumbPrint + " -TargetSSLStore " + sslStore;
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output != string.Empty)
             {
@@ -948,14 +960,14 @@ namespace AspNetCoreModule.Test.Framework
             return output;
         }
 
-        public void SetSSLCertificate(int port, string subjectName, string hexIpAddress, string thumbPrint)
+        public void SetSSLCertificate(int port, string subjectName, string hexIpAddress, string thumbPrint, string sslStore = @"Cert:\LocalMachine\My")
         {
             // Remove a certificate mapping if it exists
             RemoveSSLCertificate(port, hexIpAddress);
 
             // Configure certificate mapping with the newly created certificate
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"";
+            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"" + " -TargetSSLStore " + sslStore;
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output != string.Empty)
             {
@@ -963,7 +975,7 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
-        public void RemoveSSLCertificate(int port, string hexIpAddress)
+        public void RemoveSSLCertificate(int port, string hexIpAddress, string sslStore = @"Cert:\LocalMachine\My")
         {
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
             string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Get-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();

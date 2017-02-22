@@ -3,15 +3,19 @@
 
 ##############################################################################
 # Example
-# $thumPrint = .\certificate.ps1 -Command Create-SelfSignedCertificate -Subject foo
-# .\certificate.ps1 -Command Delete-Certificate -ThumbPrintToDelete $thumPrint
+# $thumbPrint = "914BA16B8E86E90C69BA72F16B60214232D22D20"
+# $thumbPrint = .\certificate.ps1 -Command Create-SelfSignedCertificate -Subject localhost -TargetSSLStore "Cert:\LocalMachine\Root"
+# .\certificate.ps1 -Command Delete-Certificate -TargetThumbPrint $thumbPrint 
+# .\certificate.ps1 -Command Delete-Certificate -TargetThumbPrint $thumbPrint -TargetSSLStore "Cert:\LocalMachine\Root"
+# .\certificate.ps1 -Command Export-CertificateToTrustedRootCA -TargetThumbPrint $thumbPrint
 ##############################################################################
 
 
 Param(
     [parameter(Mandatory=$true , Position=0)]
     [ValidateSet("Create-SelfSignedCertificate",
-                 "Delete-Certificate")]
+                 "Delete-Certificate",
+                 "Export-CertificateToTrustedRootCA")]
     [string]
     $Command,
 
@@ -29,8 +33,18 @@ Param(
 
     [Parameter()]
     [string]
-    $ThumbPrintToDelete = ""
+    $TargetSSLStore = "",
+
+    [Parameter()]
+    [string]
+    $TargetThumbPrint = ""
 )
+
+# adjust parameter variable
+if (-not $TargetSSLStore)
+{
+    $TargetSSLStore = "Cert:\LocalMachine\My"
+}
 
 function Create-SelfSignedCertificate($_subject, $_friendlyName, $_alternativeNames) {
 
@@ -131,16 +145,51 @@ function Create-SelfSignedCertificate($_subject, $_friendlyName, $_alternativeNa
     return $thumbPrint
 }
 
-function Delete-Certificate($_thumbPrintToDelete) {
+function Delete-Certificate($_targetThumbPrint, $_targetSSLStore = $TargetSSLStore) {
 
-    if (Test-Path "Cert:\LocalMachine\My\$_thumbPrintToDelete")
+    if (Test-Path "$_targetSSLStore\$_targetThumbPrint")
     {
-        Remove-Item "Cert:\LocalMachine\My\$_thumbPrintToDelete" -Force -Confirm:$false
+        Remove-Item "$_targetSSLStore\$_targetThumbPrint" -Force -Confirm:$false
     }
 
-    if (Test-Path "Cert:\LocalMachine\My\$_thumbPrintToDelete")
+    if (Test-Path "$_targetSSLStore\$_targetThumbPrint")
     {
-        ("Failed to delete a certificate of $_thumbPrintToDelete")
+        return ("Failed to delete a certificate of $_targetThumbPrint")
+    }
+}
+
+function Export-CertificateToTrustedRootCA($_targetThumbPrint)
+{
+    $rootSSLStore = "Cert:\LocalMachine\Root"
+
+    if (-not (Test-Path "$TargetSSLStore\$_targetThumbPrint"))
+    {
+        return ("Export failed. Can't find target certificate: $TargetSSLStore\$_targetThumbPrint")
+    }
+
+    Delete-Certificate $_targetThumbPrint $rootSSLStore
+    if (Test-Path "$rootSSLStore\$_targetThumbPrint")
+    {
+        return ("Export failed. Can't delete already existing one $rootSSLStore\$_targetThumbPrint")
+    }
+
+    $cert = Get-Item "$TargetSSLStore\$_targetThumbPrint"
+    $tempExportFile = "$env:temp\_tempCertificate.cer"
+    if (Test-Path $tempExportFile)
+    {
+        Remove-Item $tempExportFile -Force -Confirm:$false
+    }
+                
+    Export-Certificate -Cert $cert -FilePath $tempExportFile | Out-Null
+    if (-not (Test-Path $tempExportFile))
+    {
+        return ("Export failed. Can't export $TargetSSLStore\$_targetThumbPrint to $tempExportFile")
+    }
+
+    Import-Certificate -CertStoreLocation $rootSSLStore -FilePath $tempExportFile | Out-Null    
+    if (-not (Test-Path "$rootSSLStore\$_targetThumbPrint"))
+    {
+        return ("Export failed. Can't copy $TargetSSLStore\$_targetThumbPrint to $rootSSLStore")
     }
 }
 
@@ -152,7 +201,11 @@ switch ($Command)
     }
     "Delete-Certificate"
     {
-        return Delete-Certificate $ThumbPrintToDelete
+        return Delete-Certificate $TargetThumbPrint
+    }
+    "Export-CertificateToTrustedRootCA"
+    {
+        return Export-CertificateToTrustedRootCA $TargetThumbPrint
     }
     default
     {
