@@ -979,7 +979,7 @@ namespace AspNetCoreModule.Test
                     string thumbPrint = iisConfig.CreateSelfSignedCertificate(subjectName);
 
                     // Export the self signed certificate to rootCA
-                    iisConfig.ExportCertificateToTrustedRootCA(thumbPrint);
+                    iisConfig.ExportCertificateTo(thumbPrint, sslStoreFrom:@"Cert:\LocalMachine\My", sslStoreTo:@"Cert:\LocalMachine\Root");
 
                     // Create a new SSL certificate mapping to IP:Port endpoint with the newly created self signed certificage
                     iisConfig.SetSSLCertificate(sslPort, subjectName, hexIPAddress, thumbPrint);
@@ -1025,7 +1025,7 @@ namespace AspNetCoreModule.Test
                     string thumbPrint = iisConfig.CreateSelfSignedCertificate(subjectName);
 
                     // Export the self signed certificate to rootCA
-                    iisConfig.ExportCertificateToTrustedRootCA(thumbPrint);
+                    iisConfig.ExportCertificateTo(thumbPrint);
 
                     // Create a new SSL certificate mapping to IP:Port endpoint with the newly created self signed certificage
                     iisConfig.SetSSLCertificate(sslPort, subjectName, hexIPAddress, thumbPrint);

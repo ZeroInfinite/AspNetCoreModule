@@ -927,7 +927,10 @@ namespace AspNetCoreModule.Test.Framework
         public string CreateSelfSignedCertificate(string subjectName)
         {
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Create-SelfSignedCertificate -Subject " + subjectName;
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") 
+                + " -Command Create-SelfSignedCertificate" 
+                + " -Subject " + subjectName;
+
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output.Length != 40)
             {
@@ -936,10 +939,15 @@ namespace AspNetCoreModule.Test.Framework
             return output;
         }
 
-        public string ExportCertificateToTrustedRootCA(string thumbPrint, string sslStore = @"Cert:\LocalMachine\My")
+        public string ExportCertificateTo(string thumbPrint, string sslStoreFrom = @"Cert:\LocalMachine\My", string sslStoreTo = @"Cert:\LocalMachine\Root")
         {
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Export-CertificateToTrustedRootCA -TargetThumbPrint " + thumbPrint + " -TargetSSLStore " + sslStore;
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + 
+                " -Command Export-CertificateTo" + 
+                " -TargetThumbPrint " + thumbPrint + 
+                " -TargetSSLStore " + sslStoreFrom +
+                " -ExportToSSLStore " + sslStoreTo;
+
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output != string.Empty)
             {
@@ -951,7 +959,11 @@ namespace AspNetCoreModule.Test.Framework
         public string DeleteCertificate(string thumbPrint, string sslStore= @"Cert:\LocalMachine\My")
         {
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + @" -Command Delete-Certificate -TargetThumbPrint " + thumbPrint + " -TargetSSLStore " + sslStore;
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") + 
+                " -Command Delete-Certificate" + 
+                " -TargetThumbPrint " + thumbPrint + 
+                " -TargetSSLStore " + sslStore;
+
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output != string.Empty)
             {
@@ -967,7 +979,13 @@ namespace AspNetCoreModule.Test.Framework
 
             // Configure certificate mapping with the newly created certificate
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Add-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString() + " –Thumbprint \"" + thumbPrint + "\"" + " -TargetSSLStore " + sslStore;
+            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + 
+                " -Command Add-SslBinding" + 
+                " -IpAddress " + hexIpAddress + 
+                " -Port " + port.ToString() + 
+                " –Thumbprint \"" + thumbPrint + "\"" + 
+                " -TargetSSLStore " + sslStore;
+
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output != string.Empty)
             {
@@ -978,7 +996,11 @@ namespace AspNetCoreModule.Test.Framework
         public void RemoveSSLCertificate(int port, string hexIpAddress, string sslStore = @"Cert:\LocalMachine\My")
         {
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
-            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + " -Command Get-SslBinding -IpAddress " + hexIpAddress + " -Port " + port.ToString();
+            string powershellScript = Path.Combine(toolsPath, "httpsys.ps1") + 
+                " -Command Get-SslBinding" + 
+                " -IpAddress " + hexIpAddress + 
+                " -Port " + port.ToString();
+
             string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
             if (output != string.Empty)
             {

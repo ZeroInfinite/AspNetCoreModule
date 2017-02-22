@@ -4,10 +4,12 @@
 ##############################################################################
 # Example
 # $thumbPrint = "914BA16B8E86E90C69BA72F16B60214232D22D20"
-# $thumbPrint = .\certificate.ps1 -Command Create-SelfSignedCertificate -Subject localhost -TargetSSLStore "Cert:\LocalMachine\Root"
+# $thumbPrint = .\certificate.ps1 -Command Create-SelfSignedCertificate -Subject localhost -TargetSSLStore "Cert:\LocalMachine\My"
+# .\certificate.ps1 -Command Get-CertificatePublicKey -TargetThumbPrint $thumbPrint -TargetSSLStore "Cert:\LocalMachine\My"
+# .\certificate.ps1 -Command Export-CertificateTo -TargetThumbPrint $thumbPrint -TargetSSLStore "Cert:\LocalMachine\My" -ExportToSSLStore "Cert:\LocalMachine\Root"
+# .\certificate.ps1 -Command Export-CertificateTo -TargetThumbPrint $thumbPrint -TargetSSLStore "Cert:\LocalMachine\My" -ExportToSSLStore "Cert:\CurrentUser\My"
 # .\certificate.ps1 -Command Delete-Certificate -TargetThumbPrint $thumbPrint 
 # .\certificate.ps1 -Command Delete-Certificate -TargetThumbPrint $thumbPrint -TargetSSLStore "Cert:\LocalMachine\Root"
-# .\certificate.ps1 -Command Export-CertificateToTrustedRootCA -TargetThumbPrint $thumbPrint
 ##############################################################################
 
 
@@ -15,7 +17,8 @@ Param(
     [parameter(Mandatory=$true , Position=0)]
     [ValidateSet("Create-SelfSignedCertificate",
                  "Delete-Certificate",
-                 "Export-CertificateToTrustedRootCA")]
+                 "Export-CertificateTo",
+                 "Get-CertificatePublicKey")]
     [string]
     $Command,
 
@@ -25,7 +28,7 @@ Param(
 
     [Parameter()]
     [string]
-    $FriendlyName = "",
+    $FriendlyName = "", 
 
     [Parameter()]
     [string[]]
@@ -37,6 +40,10 @@ Param(
 
     [Parameter()]
     [string]
+    $ExportToSSLStore = "",
+    
+    [Parameter()]
+    [string]
     $TargetThumbPrint = ""
 )
 
@@ -44,6 +51,11 @@ Param(
 if (-not $TargetSSLStore)
 {
     $TargetSSLStore = "Cert:\LocalMachine\My"
+}
+
+if (-not $ExportToSSLStore)
+{
+    $ExportToSSLStore = "Cert:\LocalMachine\Root"
 }
 
 function Create-SelfSignedCertificate($_subject, $_friendlyName, $_alternativeNames) {
@@ -117,7 +129,8 @@ function Create-SelfSignedCertificate($_subject, $_friendlyName, $_alternativeNa
 
     $cert.Encode()
 
-    $locator = $(New-Object "System.Guid").ToString()
+    #$locator = $(New-Object "System.Guid").ToString()
+    $locator = [guid]::NewGuid().ToString()
     $enrollment = new-object -com "X509Enrollment.CX509Enrollment"
     $enrollment.CertificateFriendlyName = $locator
     $enrollment.InitializeFromRequest($cert)
@@ -158,19 +171,17 @@ function Delete-Certificate($_targetThumbPrint, $_targetSSLStore = $TargetSSLSto
     }
 }
 
-function Export-CertificateToTrustedRootCA($_targetThumbPrint)
+function Export-CertificateTo($_targetThumbPrint)
 {
-    $rootSSLStore = "Cert:\LocalMachine\Root"
-
     if (-not (Test-Path "$TargetSSLStore\$_targetThumbPrint"))
     {
         return ("Export failed. Can't find target certificate: $TargetSSLStore\$_targetThumbPrint")
     }
 
-    Delete-Certificate $_targetThumbPrint $rootSSLStore
-    if (Test-Path "$rootSSLStore\$_targetThumbPrint")
+    Delete-Certificate $_targetThumbPrint $ExportToSSLStore
+    if (Test-Path "$ExportToSSLStore\$_targetThumbPrint")
     {
-        return ("Export failed. Can't delete already existing one $rootSSLStore\$_targetThumbPrint")
+        return ("Export failed. Can't delete already existing one $ExportToSSLStore\$_targetThumbPrint")
     }
 
     $cert = Get-Item "$TargetSSLStore\$_targetThumbPrint"
@@ -186,11 +197,25 @@ function Export-CertificateToTrustedRootCA($_targetThumbPrint)
         return ("Export failed. Can't export $TargetSSLStore\$_targetThumbPrint to $tempExportFile")
     }
 
-    Import-Certificate -CertStoreLocation $rootSSLStore -FilePath $tempExportFile | Out-Null    
-    if (-not (Test-Path "$rootSSLStore\$_targetThumbPrint"))
+    Import-Certificate -CertStoreLocation $ExportToSSLStore -FilePath $tempExportFile | Out-Null    
+    if (-not (Test-Path "$ExportToSSLStore\$_targetThumbPrint"))
     {
-        return ("Export failed. Can't copy $TargetSSLStore\$_targetThumbPrint to $rootSSLStore")
+        return ("Export failed. Can't copy $TargetSSLStore\$_targetThumbPrint to $ExportToSSLStore")
     }
+}
+
+function Get-CertificatePublicKey($_targetThumbPrint)
+{
+    if (-not (Test-Path "$TargetSSLStore\$_targetThumbPrint"))
+    {
+        return ("Can't find target certificate")
+    }
+
+    $cert = Get-Item "$TargetSSLStore\$_targetThumbPrint"
+    $byteArray = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
+    $publicKey = [System.Convert]::ToBase64String($byteArray).Trim()
+
+    return $publicKey
 }
 
 switch ($Command)
@@ -203,9 +228,13 @@ switch ($Command)
     {
         return Delete-Certificate $TargetThumbPrint
     }
-    "Export-CertificateToTrustedRootCA"
+    "Export-CertificateTo"
     {
-        return Export-CertificateToTrustedRootCA $TargetThumbPrint
+        return Export-CertificateTo $TargetThumbPrint
+    }
+    "Get-CertificatePublicKey"
+    {
+        return Get-CertificatePublicKey $TargetThumbPrint
     }
     default
     {
