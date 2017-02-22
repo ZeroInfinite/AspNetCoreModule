@@ -260,6 +260,28 @@ namespace AspNetCoreModule.Test.Framework
             }
         }
 
+        public void EnableOneToOneClientCertificateMapping(string siteName, string userName, string password, string publicKey)
+        {
+            TestUtility.LogInformation("Enable Windows authentication : " + siteName);
+            using (ServerManager serverManager = GetServerManager())
+            {
+                Configuration config = serverManager.GetApplicationHostConfiguration();
+
+                ConfigurationSection iisClientCertificateMappingAuthenticationSection = config.GetSection("system.webServer/security/authentication/iisClientCertificateMappingAuthentication", siteName);
+                ConfigurationElementCollection oneToOneMappingsCollection = iisClientCertificateMappingAuthenticationSection.GetCollection("oneToOneMappings");
+
+                iisClientCertificateMappingAuthenticationSection["enabled"] = true;
+
+                ConfigurationElement addElement = oneToOneMappingsCollection.CreateElement("add");
+                addElement["userName"] = userName;
+                addElement["password"] = password;
+                addElement["certificate"] = publicKey;
+                oneToOneMappingsCollection.Add(addElement);
+                
+                serverManager.CommitChanges();
+            }
+        }
+
         public void SetCompression(string siteName, bool enabled)
         {
             TestUtility.LogInformation("Enable Compression : " + siteName);
