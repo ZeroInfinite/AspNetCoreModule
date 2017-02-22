@@ -979,7 +979,7 @@ namespace AspNetCoreModule.Test
                     string thumbPrint = iisConfig.CreateSelfSignedCertificate(subjectName);
 
                     // Export the self signed certificate to rootCA
-                    iisConfig.ExportCertificateTo(thumbPrint, sslStoreFrom:@"Cert:\LocalMachine\My", sslStoreTo:@"Cert:\LocalMachine\Root");
+                    iisConfig.ExportCertificateTo(thumbPrint, sslStoreTo:@"Cert:\LocalMachine\Root");
 
                     // Create a new SSL certificate mapping to IP:Port endpoint with the newly created self signed certificage
                     iisConfig.SetSSLCertificate(sslPort, subjectName, hexIPAddress, thumbPrint);
@@ -1025,14 +1025,22 @@ namespace AspNetCoreModule.Test
                     string thumbPrint = iisConfig.CreateSelfSignedCertificate(subjectName);
 
                     // Export the self signed certificate to rootCA
-                    iisConfig.ExportCertificateTo(thumbPrint, sslStoreFrom: @"Cert:\LocalMachine\My", sslStoreTo: @"Cert:\LocalMachine\Root");
+                    iisConfig.ExportCertificateTo(thumbPrint, sslStoreTo:@"Cert:\LocalMachine\Root");
 
-                    // Export the self signed certificate to current User
-                    iisConfig.ExportCertificateTo(thumbPrint, sslStoreFrom: @"Cert:\LocalMachine\My", sslStoreTo: @"Cert:\LocalMachine\Root");
-                    
                     // Create a new SSL certificate mapping to IP:Port endpoint with the newly created self signed certificage
                     iisConfig.SetSSLCertificate(sslPort, subjectName, hexIPAddress, thumbPrint);
+
+                    ///////////////////////////////////////////
+                    // Enable Client Certificate authentication
+                    ///////////////////////////////////////////
                     
+                    // 1. Export the self signed certificate to current User and get its public key
+                    iisConfig.ExportCertificateTo(thumbPrint, sslStoreTo: @"Cert:\CurrentUser\My");
+                    string publicKey = iisConfig.GetCertificatePublicKey(thumbPrint, @"Cert:\CurrentUser\My");
+
+                    // 2. Configure OnetToOneClientCertificateMapping the public key
+                    iisConfig.EnableOneToOneClientCertificateMapping(testSite.SiteName, "administrator", "iis6!dfu", publicKey);
+
                     // verify http request
                     string result = string.Empty;
                     result = await GetResponseAndHeaders(testSite.AspNetCoreApp.GetUri(), new string[] { "Accept-Encoding", "gzip" }, HttpStatusCode.OK);

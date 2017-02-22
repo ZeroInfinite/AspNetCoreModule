@@ -978,6 +978,22 @@ namespace AspNetCoreModule.Test.Framework
             return output;
         }
 
+        public string GetCertificatePublicKey(string thumbPrint, string sslStore = @"Cert:\LocalMachine\My")
+        {
+            string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");
+            string powershellScript = Path.Combine(toolsPath, "certificate.ps1") +
+                " -Command Get-CertificatePublicKey" +
+                " -TargetThumbPrint " + thumbPrint +
+                " -TargetSSLStore " + sslStore;
+
+            string output = TestUtility.RunPowershellScript(powershellScript).Trim(new char[] { ' ', '\r', '\n' });
+            if (output.Length < 500)
+            {
+                throw new System.ApplicationException("Failed to get certificate public key, output: " + output);
+            }
+            return output;
+        }
+
         public string DeleteCertificate(string thumbPrint, string sslStore= @"Cert:\LocalMachine\My")
         {
             string toolsPath = Path.Combine(InitializeTestMachine.GetSolutionDirectory(), "tools");

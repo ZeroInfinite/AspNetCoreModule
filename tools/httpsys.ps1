@@ -227,12 +227,15 @@ function Add-SslBinding($_ipEndpoint, $_certificate, $_appId) {
     if ($_ipEndpoint -eq $null) {
         throw "Ip Endpoint required."
     }
+
     if ($_certificate -eq $null) {
         throw "Certificate required."
     }
+
     if ($appId -eq $null) {
         throw "App id required."
     }
+
     <# FYI, [System.Guid]::Parse() is not supported in lower version of powershell
     if (-not($_appId -is [System.Guid])) {
         $_appId = [System.Guid]::Parse($_appId)
@@ -243,6 +246,7 @@ function Add-SslBinding($_ipEndpoint, $_certificate, $_appId) {
 }
 
 function Delete-SslBinding($_ipEndpoint) {
+
     if ($_ipEndpoint -eq $null) {
         throw "Ip Endpoint required."
     }
@@ -251,6 +255,7 @@ function Delete-SslBinding($_ipEndpoint) {
 }
 
 function Get-SslBinding($_ipEndpoint) {
+
     if ($_ipEndpoint -eq $null) {
         throw "Ip Endpoint required."
     }

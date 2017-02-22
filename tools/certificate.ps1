@@ -60,6 +60,11 @@ if (-not $ExportToSSLStore)
 
 function Create-SelfSignedCertificate($_subject, $_friendlyName, $_alternativeNames) {
 
+    if (-not $_subject)
+    {
+        return ("_subject is required")
+    }
+
     $subjectDn = new-object -com "X509Enrollment.CX500DistinguishedName"
     $subjectDn.Encode( "CN=" + $_subject, $subjectDn.X500NameFlags.X500NameFlags.XCN_CERT_NAME_STR_NONE)
     $issuer = $_subject
@@ -160,6 +165,11 @@ function Create-SelfSignedCertificate($_subject, $_friendlyName, $_alternativeNa
 
 function Delete-Certificate($_targetThumbPrint, $_targetSSLStore = $TargetSSLStore) {
 
+    if (-not $_targetThumbPrint)
+    {
+        return ("_targetThumbPrint is required")
+    }
+
     if (Test-Path "$_targetSSLStore\$_targetThumbPrint")
     {
         Remove-Item "$_targetSSLStore\$_targetThumbPrint" -Force -Confirm:$false
@@ -173,6 +183,11 @@ function Delete-Certificate($_targetThumbPrint, $_targetSSLStore = $TargetSSLSto
 
 function Export-CertificateTo($_targetThumbPrint)
 {
+    if (-not $_targetThumbPrint)
+    {
+        return ("_targetThumbPrint is required")
+    }
+
     if (-not (Test-Path "$TargetSSLStore\$_targetThumbPrint"))
     {
         return ("Export failed. Can't find target certificate: $TargetSSLStore\$_targetThumbPrint")
@@ -206,6 +221,11 @@ function Export-CertificateTo($_targetThumbPrint)
 
 function Get-CertificatePublicKey($_targetThumbPrint)
 {
+    if (-not $_targetThumbPrint)
+    {
+        return ("_targetThumbPrint is required")
+    }
+
     if (-not (Test-Path "$TargetSSLStore\$_targetThumbPrint"))
     {
         return ("Can't find target certificate")
